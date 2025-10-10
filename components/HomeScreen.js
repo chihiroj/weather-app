@@ -1,23 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Image, StyleSheet, Text } from "react-native";
 import { Button, Card, IconButton } from "react-native-paper";
 import { View } from "react-native";
 import CityDialog from "./CityDialog";
 import { getWeather } from "../weatherApi";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { TemperatureContext } from "../temperatureContext";
 
 
-export default function HomeScreen({ favorites, setFavorites }) {
+
+
+
+
+
+export default function HomeScreen({ favorites, setFavorites, selectedCity }) {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [weather, setWeather] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
-
-
-
+  const { isCelsius } = useContext(TemperatureContext);
 
   useEffect(() => {
-    getWeather("Tokyo").then(setWeather).catch(console.error);
-  }, []);
+    getWeather(selectedCity).then(setWeather).catch(console.error);
+  }, [selectedCity]);
   useEffect(() => {
     if (weather?.location?.name) {
       setIsFavorite(favorites.includes(weather.location.name));
@@ -32,8 +36,8 @@ export default function HomeScreen({ favorites, setFavorites }) {
     const already = favorites.includes(city);
 
     const updated = already
-      ? favorites.filter((c) => c !== city)   // 登録済み → 削除
-      : [...favorites, city];                 // 未登録 → 追加
+      ? favorites.filter((c) => c !== city)
+      : [...favorites, city];
 
     setFavorites(updated);
     await saveFavorites(updated);
@@ -53,7 +57,9 @@ export default function HomeScreen({ favorites, setFavorites }) {
             onPress={() => setDialogVisible(true)}
           />
         </View>
-        <Text style={textStyles.secondHeading}>{weather?.current.temp_c}℃</Text>
+        <Text style={textStyles.secondHeading}>{isCelsius
+          ? `${weather?.current.temp_c ?? "--"}℃`
+          : `${weather?.current.temp_f ?? "--"}℉`}</Text>
         {weather &&
           <Image
             source={{ uri: `https:${weather?.current.condition.icon}` }}
@@ -66,7 +72,11 @@ export default function HomeScreen({ favorites, setFavorites }) {
       {weather?.forecast.forecastday.map(forecast => (
         <Card key={forecast.date} style={styles.card}>
           <Card.Title title={forecast.date} />
-          <Card.Content><Text>{forecast.day.condition.text}/ {forecast.day.avgtemp_c}℃</Text></Card.Content>
+          <Card.Content><Text>
+            {forecast.day.condition.text}/{" "}
+            {isCelsius
+              ? `${forecast.day.avgtemp_c}℃`
+              : `${forecast.day.avgtemp_f}℉`}</Text></Card.Content>
         </Card>
       ))}
 
@@ -74,12 +84,12 @@ export default function HomeScreen({ favorites, setFavorites }) {
         style={styles.likeButton}
         mode="contained"
         onPress={registerFavorite}
-        // ★ ハートの描画を関数にして色だけ変える
+
         icon={() => (
           <MaterialCommunityIcons
             name="heart"
             size={20}
-            color={isFavorite ? "#ff5c8d" : "#999"} // ← 中のハートだけ色変更！
+            color={isFavorite ? "#ff5c8d" : "#999"}
           />
         )}
       >

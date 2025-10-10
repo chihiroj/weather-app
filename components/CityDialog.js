@@ -14,6 +14,7 @@ export default function CityDialog({ dialogVisible, setDialogVisible, setWeather
       console.log(data);
       setWeather(data);
       setDialogVisible(false);
+      setCity(data?.location.name);
     } catch (err) {
       setError(err.message);
     }
