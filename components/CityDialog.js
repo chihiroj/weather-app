@@ -2,8 +2,10 @@ import { useState } from "react";
 import { View, Button, Modal, Text, TextInput, StyleSheet } from "react-native";
 import { getWeather } from "../weatherApi";
 
-
-export default function CityDialog({ dialogVisible, setDialogVisible, setWeather }) {
+/**
+ * This component is used for searching for a city to retrieve weather for.
+ */
+export default function CityDialog({ dialogVisible, setDialogVisible, setWeather, setSelectedCity }) {
   const [dialogText, setDialogText] = useState("");
   const [error, setError] = useState(null);
 
@@ -13,8 +15,8 @@ export default function CityDialog({ dialogVisible, setDialogVisible, setWeather
       const data = await getWeather(city);
       console.log(data);
       setWeather(data);
+      setSelectedCity(data?.location.name)
       setDialogVisible(false);
-      setCity(data?.location.name);
     } catch (err) {
       setError(err.message);
     }

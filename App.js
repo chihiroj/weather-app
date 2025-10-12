@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AppNavigator from './components/AppNavigator';
 
+
 export default function App() {
   return (
     <SafeAreaProvider>

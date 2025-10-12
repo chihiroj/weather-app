@@ -2,7 +2,10 @@ import { View, StyleSheet } from "react-native";
 import { List, IconButton, Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 
-
+/**
+ * This component is for saving,showing and edditing favorites city. 
+ * 
+ */
 export default function FavoriteScreen({ favorites, setFavorites, saveFavorites, setSelectedCity }) {
   const navigation = useNavigation();
 

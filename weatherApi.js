@@ -1,6 +1,9 @@
 import { WEATHER_API_KEY } from "@env";
 
-
+/**
+ * This file is for getting data from weather API.
+ * 
+ */
 export async function getWeather(city) {
   const url = `http://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${city}&days=7&aqi=no&alerts=no`;
 

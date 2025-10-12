@@ -1,26 +1,32 @@
 import { useEffect, useState, useContext } from "react";
 import { Image, StyleSheet, Text } from "react-native";
-import { Button, Card, IconButton } from "react-native-paper";
+import { Button, Card } from "react-native-paper";
 import { View } from "react-native";
 import CityDialog from "./CityDialog";
 import { getWeather } from "../weatherApi";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TemperatureContext } from "../temperatureContext";
+import * as Location from "expo-location";
+import { FAB, Portal } from 'react-native-paper';
+import { saveFavorites } from "../favorite";
+import { Alert } from "react-native";
 
-
-
-
-
-
-
-export default function HomeScreen({ favorites, setFavorites, selectedCity }) {
+/**
+ * This componet is for showing  weather for selected city. 
+ * 
+ */
+export default function HomeScreen({ favorites, setFavorites, selectedCity, setSelectedCity }) {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [weather, setWeather] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const { isCelsius } = useContext(TemperatureContext);
+  const [fabOpen, setFabOpen] = useState(false);
 
   useEffect(() => {
-    getWeather(selectedCity).then(setWeather).catch(console.error);
+    console.log(selectedCity);
+    getWeather(selectedCity)
+      .then(setWeather)
+      .catch(() => Alert.alert("Error", "Failed to load weather data"));
   }, [selectedCity]);
   useEffect(() => {
     if (weather?.location?.name) {
@@ -42,20 +48,38 @@ export default function HomeScreen({ favorites, setFavorites, selectedCity }) {
     setFavorites(updated);
     await saveFavorites(updated);
     setIsFavorite(!already)
-  }
+  };
+  const getCityFromGPS = async () => {
+    try {
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Location permission was not granted."
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+      const data = await getWeather(`${latitude},${longitude}`);
+      setWeather(data);
+    } catch (error) {
+      console.error("Location error:", error);
+      Alert.alert(
+        "Location Error",
+        "Failed to get current location."
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <CityDialog dialogVisible={dialogVisible} setDialogVisible={setDialogVisible} setWeather={setWeather} />
+      <CityDialog dialogVisible={dialogVisible} setDialogVisible={setDialogVisible} setWeather={setWeather} setSelectedCity={setSelectedCity} />
       <View style={styles.currentWeatherContainer}>
         <View style={styles.cityContainer}>
           <Text style={textStyles.heading}>{weather?.location.name ?? "Search city"}</Text>
-          <IconButton
-            icon="square-edit-outline"
-            size={30}
-            iconColor="black"
-            onPress={() => setDialogVisible(true)}
-          />
         </View>
         <Text style={textStyles.secondHeading}>{isCelsius
           ? `${weather?.current.temp_c ?? "--"}℃`
@@ -71,7 +95,7 @@ export default function HomeScreen({ favorites, setFavorites, selectedCity }) {
 
       {weather?.forecast.forecastday.map(forecast => (
         <Card key={forecast.date} style={styles.card}>
-          <Card.Title title={forecast.date} />
+          <Card.Title title={forecast.date} titlestyle={styles.cardTitle} />
           <Card.Content><Text>
             {forecast.day.condition.text}/{" "}
             {isCelsius
@@ -96,6 +120,31 @@ export default function HomeScreen({ favorites, setFavorites, selectedCity }) {
         Register favorite
       </Button>
 
+      <Portal>
+        <FAB.Group
+          backdropColor="transparent"
+          dismissOnBackdropPress={false}
+          open={fabOpen}
+          visible
+          icon={fabOpen ? 'window-close' : 'menu'}
+          actions={[
+            { icon: 'crosshairs-gps', onPress: getCityFromGPS },
+            { icon: 'square-edit-outline', onPress: () => setDialogVisible(true) },
+          ]}
+          style={{
+            position: 'absolute',
+            right: 16,
+            bottom: 80,
+          }}
+          onStateChange={() => setFabOpen(!fabOpen)}
+          onPress={() => {
+            if (fabOpen) {
+              setFabOpen(!fabOpen);
+
+            }
+          }}
+        />
+      </Portal>
     </View >
   );
 }
@@ -117,20 +166,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f0f0"
   },
   card: {
     marginTop: 10,
     width: "90%",
-    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#333',
     borderRadius: 12,
     elevation: 0,
     shadowOpacity: 0,
     marginVertical: 8,
 
   },
+
   currentWeatherContainer: {
     gap: 5,
     justifyContent: "center",

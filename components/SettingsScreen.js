@@ -2,7 +2,10 @@ import { useContext } from "react";
 import { View, Text, Switch, StyleSheet } from "react-native";
 import { TemperatureContext } from "../temperatureContext";
 
-
+/**
+ * This component is for changing Celsius and Fahrenheit.
+ * 
+ */
 export default function SettingsScreen() {
   const { isCelsius, setIsCelsius } = useContext(TemperatureContext);
 

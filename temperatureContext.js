@@ -1,6 +1,9 @@
 import { createContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+/**
+ * This file is for saving celsius and fahrenheit setting.
+ */
 export const TemperatureContext = createContext({
   isCelsius: true,
   setIsCelsius: () => { },
